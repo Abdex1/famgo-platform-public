@@ -1,0 +1,252 @@
+// deployments/grafana/dashboards.yaml
+// Grafana Dashboards for FamGo Platform Observability
+
+---
+# Dashboard 1: Request Latency and Throughput
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-request-performance
+  namespace: monitoring
+data:
+  request-performance.json: |
+    {
+      "dashboard": {
+        "title": "Request Performance - Ride Service",
+        "tags": ["ride-service", "performance"],
+        "panels": [
+          {
+            "title": "Request Latency (p50, p95, p99)",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.50, http_request_duration_seconds_bucket)"
+              },
+              {
+                "expr": "histogram_quantile(0.95, http_request_duration_seconds_bucket)"
+              },
+              {
+                "expr": "histogram_quantile(0.99, http_request_duration_seconds_bucket)"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Request Rate (requests/sec)",
+            "targets": [
+              {
+                "expr": "rate(http_request_count[1m])"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Error Rate",
+            "targets": [
+              {
+                "expr": "rate(http_request_errors_total[1m])"
+              }
+            ],
+            "type": "graph"
+          }
+        ]
+      }
+    }
+
+---
+# Dashboard 2: Ride Metrics
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-ride-metrics
+  namespace: monitoring
+data:
+  ride-metrics.json: |
+    {
+      "dashboard": {
+        "title": "Ride Metrics",
+        "tags": ["rides", "business"],
+        "panels": [
+          {
+            "title": "Rides Created (total)",
+            "targets": [
+              {
+                "expr": "rides_created_total"
+              }
+            ],
+            "type": "stat"
+          },
+          {
+            "title": "Rides Completed (total)",
+            "targets": [
+              {
+                "expr": "rides_completed_total"
+              }
+            ],
+            "type": "stat"
+          },
+          {
+            "title": "Rides Cancelled (total)",
+            "targets": [
+              {
+                "expr": "rides_cancelled_total"
+              }
+            ],
+            "type": "stat"
+          },
+          {
+            "title": "Active Rides (current)",
+            "targets": [
+              {
+                "expr": "active_rides"
+              }
+            ],
+            "type": "gauge"
+          },
+          {
+            "title": "Completion Rate",
+            "targets": [
+              {
+                "expr": "rides_completed_total / (rides_completed_total + rides_cancelled_total)"
+              }
+            ],
+            "type": "gauge"
+          }
+        ]
+      }
+    }
+
+---
+# Dashboard 3: gRPC Service Calls
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-grpc-calls
+  namespace: monitoring
+data:
+  grpc-calls.json: |
+    {
+      "dashboard": {
+        "title": "gRPC Cross-Service Calls",
+        "tags": ["grpc", "services"],
+        "panels": [
+          {
+            "title": "gRPC Call Rate by Service",
+            "targets": [
+              {
+                "expr": "rate(grpc_call_count[1m])"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "gRPC Call Latency by Service",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, grpc_call_duration_seconds_bucket)"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "gRPC Errors by Service",
+            "targets": [
+              {
+                "expr": "grpc_call_count{status='error'}"
+              }
+            ],
+            "type": "graph"
+          }
+        ]
+      }
+    }
+
+---
+# Dashboard 4: Circuit Breaker Status
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-circuit-breaker
+  namespace: monitoring
+data:
+  circuit-breaker.json: |
+    {
+      "dashboard": {
+        "title": "Circuit Breaker Status",
+        "tags": ["resilience", "services"],
+        "panels": [
+          {
+            "title": "Circuit Breaker Status",
+            "description": "0=Closed (healthy), 1=Open (failing), 2=Half-open (testing)",
+            "targets": [
+              {
+                "expr": "circuit_breaker_status"
+              }
+            ],
+            "type": "gauge"
+          },
+          {
+            "title": "Service Health Timeline",
+            "targets": [
+              {
+                "expr": "circuit_breaker_status"
+              }
+            ],
+            "type": "graph"
+          }
+        ]
+      }
+    }
+
+---
+# Dashboard 5: Resource Usage
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-resources
+  namespace: monitoring
+data:
+  resources.json: |
+    {
+      "dashboard": {
+        "title": "Resource Usage - Ride Service",
+        "tags": ["resources", "infrastructure"],
+        "panels": [
+          {
+            "title": "CPU Usage (%)",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~'ride-service.*'}[1m]) * 100"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Memory Usage (MB)",
+            "targets": [
+              {
+                "expr": "container_memory_usage_bytes{pod=~'ride-service.*'} / 1024 / 1024"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Disk I/O (bytes/sec)",
+            "targets": [
+              {
+                "expr": "rate(container_fs_io_time_seconds_total{pod=~'ride-service.*'}[1m])"
+              }
+            ],
+            "type": "graph"
+          },
+          {
+            "title": "Pod Count",
+            "targets": [
+              {
+                "expr": "count(container_last_seen{pod=~'ride-service.*'})"
+              }
+            ],
+            "type": "stat"
+          }
+        ]
+      }
+    }

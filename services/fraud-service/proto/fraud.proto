@@ -1,0 +1,59 @@
+// services/fraud-service/proto/fraud.proto
+syntax = "proto3";
+
+package fraud;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/FamGo/platform/services/fraud-service/proto/fraud";
+
+service FraudService {
+  rpc CheckRide(CheckRideRequest) returns (CheckRideResponse);
+  rpc GetFraudCheck(GetFraudCheckRequest) returns (GetFraudCheckResponse);
+  rpc ReviewCheck(ReviewCheckRequest) returns (google.protobuf.Empty);
+  rpc OverrideCheck(OverrideCheckRequest) returns (google.protobuf.Empty);
+}
+
+message CheckRideRequest {
+  string ride_id = 1;
+  string user_id = 2;
+  string user_type = 3;
+  double amount = 4;
+  double latitude = 5;
+  double longitude = 6;
+}
+
+message CheckRideResponse {
+  string check_id = 1;
+  double risk_score = 2;
+  string risk_level = 3;
+  string action = 4;
+  repeated string flags = 5;
+  google.protobuf.Timestamp checked_at = 6;
+}
+
+message GetFraudCheckRequest {
+  string check_id = 1;
+}
+
+message GetFraudCheckResponse {
+  string check_id = 1;
+  string ride_id = 2;
+  double risk_score = 3;
+  string risk_level = 4;
+  repeated string flags = 5;
+  bool is_review = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message ReviewCheckRequest {
+  string check_id = 1;
+  string reviewed_by = 2;
+  string reason = 3;
+}
+
+message OverrideCheckRequest {
+  string check_id = 1;
+  string reason = 2;
+}

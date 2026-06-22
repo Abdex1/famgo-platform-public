@@ -1,0 +1,22 @@
+// proxy.ts (Next.js 16)
+
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function proxy(request: NextRequest) {
+  const token =
+    request.cookies.get('access_token')?.value;
+
+  if (!token) {
+    return NextResponse.redirect(
+      new URL('/login', request.url)
+    );
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    '/((?!login|forgot-password|reset-password|_next|api).*)',
+  ],
+};

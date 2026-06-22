@@ -1,0 +1,47 @@
+
+# 9. BUILD REDPANDA BASELINE
+
+# FILE
+
+# id="xh0efx"
+# infra/docker/messaging/redpanda/docker-compose.redpanda.yml
+
+
+# IMPLEMENTATION
+
+# yaml id="zxvxpf"
+services:
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.1.2
+
+    container_name: famgo-redpanda
+
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - "1"
+      - --memory
+      - "1G"
+      - --reserve-memory
+      - "0M"
+      - --node-id
+      - "0"
+      - --check=false
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:9092
+
+    ports:
+      - "${REDPANDA_PORT}:9092"
+
+    networks:
+      - famgo-messaging
+
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10

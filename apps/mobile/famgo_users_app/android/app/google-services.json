@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "175587010373",
+    "firebase_url": "https://famgo-21a0d-default-rtdb.firebaseio.com",
+    "project_id": "famgo-21a0d",
+    "storage_bucket": "famgo-21a0d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:175587010373:android:a6e861be54fbafa930802c",
+        "android_client_info": {
+          "package_name": "com.famgo.famgo_passenger_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "175587010373-ev38bms4aiud0mh1j2hu3ecb0vgl7he9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.famgo.famgo_passenger_app",
+            "certificate_hash": "7a5fd84a4807d6946fe626f2bb6c8779fc189e07"
+          }
+        },
+        {
+          "client_id": "175587010373-kugb5s55pe4ldf274vu19m0npm3vj3e1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbMyv7XOUmqh-wfHjPeIddNJpHegcNU_8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "175587010373-kugb5s55pe4ldf274vu19m0npm3vj3e1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "175587010373-funfu5ee8qig9a86qe1rssh9i8j0nb52.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.famgo.famgoPassenger"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

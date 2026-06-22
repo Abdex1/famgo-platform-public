@@ -1,0 +1,500 @@
+
+
+{
+  "rules": {
+    // ============================================================================
+    // PRODUCTION-GRADE FIREBASE REALTIME DATABASE SECURITY RULES
+    // ============================================================================
+    // Version: 1.0.0
+    // Last Updated: 2024
+    // Security Level: ENTERPRISE
+    // ============================================================================
+
+    // ============================================================================
+    // HELPER RULES & CONSTANTS
+    // ============================================================================
+    ".read": false,
+    ".write": false,
+
+    // ============================================================================
+    // USERS COLLECTION - Passenger & Driver Profiles
+    // ============================================================================
+    "users": {
+      "$uid": {
+        // Access Control: Only the authenticated user can read/write their own data
+        ".read": "$uid === auth.uid && auth.uid != null",
+        ".write": "$uid === auth.uid && auth.uid != null && root.child('_metadata').child('blockList').child(auth.uid).val() !== true",
+        
+        // Indexing for queries
+        ".indexOn": ["email", "phone", "blockStatus", "createdAt"],
+
+        // Enforce required fields structure
+        ".validate": "newData.hasChildren(['id', 'name', 'email', 'phone', 'blockStatus']) && newData.val().hasChildren(['createdAt'])",
+
+        // ==== FIELD-LEVEL VALIDATION ====
+        "id": {
+          ".validate": "newData.isString() && newData.val() === $uid && newData.val().length > 0",
+          ".write": "$uid === auth.uid && !data.exists()"  // Only writable on creation
+        },
+
+        "name": {
+          ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 100 && newData.val().test(/^[a-zA-Z\\s'-]+$/)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "email": {
+          ".validate": "newData.isString() && newData.val().length <= 254 && newData.val().test(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/)",
+          ".write": "$uid === auth.uid && !data.exists()"  // Only writable on creation for security
+        },
+
+        "phone": {
+          ".validate": "newData.isString() && newData.val().length >= 10 && newData.val().length <= 20 && newData.val().test(/^\\+?[0-9]{10,20}$/)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "blockStatus": {
+          ".validate": "newData.isString() && (newData.val() === 'yes' || newData.val() === 'no')",
+          ".write": "root.child('admins').child(auth.uid).val() === true"  // Only admins can block
+        },
+
+        "userType": {
+          ".validate": "newData.isString() && (newData.val() === 'passenger' || newData.val() === 'driver')",
+          ".write": "$uid === auth.uid && !data.exists()"  // Only writable on creation
+        },
+
+        "profileImage": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length <= 500 && newData.val().test(/^https:\\/\\/.+/))",
+          ".write": "$uid === auth.uid"
+        },
+
+        "address": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length <= 200)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "city": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length <= 100)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "emergencyContact": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length <= 100)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "gender": {
+          ".validate": "newData.isNull() || (newData.isString() && (newData.val() === 'male' || newData.val() === 'female' || newData.val() === 'other'))",
+          ".write": "$uid === auth.uid"
+        },
+
+        "dateOfBirth": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().test(/^\\d{4}-\\d{2}-\\d{2}$/) && newData.val() < now)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "$uid === auth.uid && !data.exists()"  // Only writable on creation
+        },
+
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "$uid === auth.uid"
+        },
+
+        "verificationStatus": {
+          ".validate": "newData.isString() && (newData.val() === 'verified' || newData.val() === 'pending' || newData.val() === 'rejected')",
+          ".write": "root.child('admins').child(auth.uid).val() === true"  // Only admins
+        },
+
+        // Deny any additional fields
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    // ============================================================================
+    // DRIVERS COLLECTION - Driver-Specific Information
+    // ============================================================================
+    "drivers": {
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('drivers').child($uid).child('isAvailable').val() === true",
+        ".write": "$uid === auth.uid && root.child('_metadata').child('blockList').child(auth.uid).val() !== true",
+        ".indexOn": ["isAvailable", "rating", "latitude", "longitude"],
+
+        ".validate": "newData.hasChildren(['licenseNumber', 'vehicleNumber', 'isAvailable']) && newData.val().hasChildren(['createdAt'])",
+
+        "licenseNumber": {
+          ".validate": "newData.isString() && newData.val().length >= 5 && newData.val().length <= 20",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "licenseExpiry": {
+          ".validate": "newData.isString() && newData.val().test(/^\\d{4}-\\d{2}-\\d{2}$/) && newData.val() > now",
+          ".write": "$uid === auth.uid"
+        },
+
+        "vehicleNumber": {
+          ".validate": "newData.isString() && newData.val().length >= 5 && newData.val().length <= 20 && newData.val().test(/^[A-Z0-9-]+$/)",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "vehicleType": {
+          ".validate": "newData.isString() && (newData.val() === 'car' || newData.val() === 'auto' || newData.val() === 'bike')",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "vehicleColor": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length <= 50)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "isAvailable": {
+          ".validate": "newData.isBoolean()",
+          ".write": "$uid === auth.uid && root.child('_metadata').child('blockList').child(auth.uid).val() !== true"
+        },
+
+        "latitude": {
+          ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90",
+          ".write": "$uid === auth.uid"
+        },
+
+        "longitude": {
+          ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180",
+          ".write": "$uid === auth.uid"
+        },
+
+        "rating": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5",
+          ".write": "root.child('_metadata').child('admins').child(auth.uid).val() === true"  // Admin only
+        },
+
+        "totalTrips": {
+          ".validate": "newData.isNumber() && newData.val() >= 0",
+          ".write": "root.child('_metadata').child('admins').child(auth.uid).val() === true"
+        },
+
+        "deviceToken": {
+          ".validate": "newData.isString() && newData.val().length > 0",
+          ".write": "$uid === auth.uid"
+        },
+
+        "bankDetails": {
+          ".validate": "newData.isNull() || newData.isObject()",
+          ".write": "$uid === auth.uid",
+          "accountNumber": {
+            ".validate": "newData.isNull() || (newData.isString() && newData.val().length >= 8)"
+          },
+          "bankName": {
+            ".validate": "newData.isNull() || (newData.isString() && newData.val().length <= 100)"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "$uid === auth.uid"
+        },
+
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    // ============================================================================
+    // ONLINE DRIVERS - Real-time Driver Availability (GeoFire)
+    // ============================================================================
+    "onlineDrivers": {
+      ".read": true,  // Public read for passenger matching
+      ".write": "auth != null && root.child('_metadata').child('blockList').child(auth.uid).val() !== true",
+      ".indexOn": ["l", "g"],  // GeoFire indices
+
+      "$driverId": {
+        ".validate": "$driverId === auth.uid",
+        ".write": "$driverId === auth.uid",
+
+        "g": {
+          ".validate": "newData.isString()"
+        },
+
+        "l": {
+          ".validate": "newData.isArray() && newData.val().length === 2 && newData.val()[0] >= -90 && newData.val()[0] <= 90 && newData.val()[1] >= -180 && newData.val()[1] <= 180"
+        }
+      }
+    },
+
+    // ============================================================================
+    // TRIP REQUESTS - Ride Request Management
+    // ============================================================================
+    "tripRequest": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('_metadata').child('blockList').child(auth.uid).val() !== true",
+      ".indexOn": ["userID", "driverId", "status", "createdAt"],
+
+      "$tripId": {
+        ".validate": "newData.hasChildren(['userID', 'pickUpLatLng', 'dropOffLatLng', 'status', 'createdAt'])",
+        ".write": "(newData.child('userID').val() === auth.uid && !data.exists()) || (data.exists() && (newData.child('driverId').val() === auth.uid || newData.child('userID').val() === auth.uid))",
+
+        "tripID": {
+          ".validate": "newData.isString() && newData.val() === $tripId"
+        },
+
+        "userID": {
+          ".validate": "newData.isString() && newData.val().length > 0",
+          ".write": "newData.val() === auth.uid && !data.exists()"
+        },
+
+        "userName": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 100"
+        },
+
+        "userPhone": {
+          ".validate": "newData.isString() && newData.val().test(/^\\+?[0-9]{10,20}$/)"
+        },
+
+        "pickUpLatLng": {
+          ".validate": "newData.isObject() && newData.hasChildren(['latitude', 'longitude'])",
+          "latitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
+          },
+          "longitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
+          }
+        },
+
+        "dropOffLatLng": {
+          ".validate": "newData.isObject() && newData.hasChildren(['latitude', 'longitude'])",
+          "latitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
+          },
+          "longitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
+          }
+        },
+
+        "pickUpAddress": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+
+        "dropOffAddress": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+
+        "vehicleType": {
+          ".validate": "newData.isString() && (newData.val() === 'car' || newData.val() === 'auto' || newData.val() === 'bike')"
+        },
+
+        "fareAmount": {
+          ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 100000"  // Max fare limit
+        },
+
+        "bidAmount": {
+          ".validate": "newData.isNull() || (newData.isNumber() && newData.val() > 0 && newData.val() < 100000)"
+        },
+
+        "status": {
+          ".validate": "newData.isString() && (newData.val() === 'new' || newData.val() === 'accepted' || newData.val() === 'arrived' || newData.val() === 'ontrip' || newData.val() === 'ended' || newData.val() === 'cancelled')"
+        },
+
+        "driverId": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length > 0)"
+        },
+
+        "driverName": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length > 0)"
+        },
+
+        "driverPhone": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().test(/^\\+?[0-9]{10,20}$/))"
+        },
+
+        "driverPhoto": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length <= 500)"
+        },
+
+        "carDetails": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length <= 100)"
+        },
+
+        "driverLocation": {
+          ".validate": "newData.isNull() || (newData.isObject() && newData.hasChildren(['latitude', 'longitude']))",
+          "latitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
+          },
+          "longitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
+          }
+        },
+
+        "paymentMethod": {
+          ".validate": "newData.isNull() || (newData.isString() && (newData.val() === 'cash' || newData.val() === 'card' || newData.val() === 'wallet'))"
+        },
+
+        "publishDateTime": {
+          ".validate": "newData.isString() && newData.val().length > 0",
+          ".write": "!data.exists()"
+        },
+
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "!data.exists()"
+        },
+
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    // ============================================================================
+    // METADATA - System-level Configuration & Counters
+    // ============================================================================
+    "_metadata": {
+      ".read": "root.child('admins').child(auth.uid).val() === true",
+      ".write": false,
+
+      "blockList": {
+        ".write": "root.child('admins').child(auth.uid).val() === true",
+        "$uid": {
+          ".validate": "newData.isBoolean()"
+        }
+      },
+
+      "stats": {
+        ".write": "root.child('admins').child(auth.uid).val() === true",
+        "totalUsers": {
+          ".validate": "newData.isNumber()"
+        },
+        "totalDrivers": {
+          ".validate": "newData.isNumber()"
+        },
+        "totalTrips": {
+          ".validate": "newData.isNumber()"
+        }
+      }
+    },
+
+    // ============================================================================
+    // ADMIN USERS - Admin Access Control
+    // ============================================================================
+    "admins": {
+      ".read": "root.child('admins').child(auth.uid).val() === true",
+      ".write": false,
+
+      "$uid": {
+        ".validate": "newData.isBoolean()"
+      }
+    },
+
+    // ============================================================================
+    // RATINGS & REVIEWS - Trip Feedback
+    // ============================================================================
+    "ratings": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": ["driverId", "userId", "createdAt"],
+
+      "$ratingId": {
+        ".validate": "newData.hasChildren(['userId', 'driverId', 'tripId', 'rating', 'createdAt'])",
+
+        "userId": {
+          ".validate": "newData.isString() === auth.uid",
+          ".write": "!data.exists()"
+        },
+
+        "driverId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+
+        "tripId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+
+        "rating": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5"
+        },
+
+        "review": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length <= 500)"
+        },
+
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "!data.exists()"
+        },
+
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    // ============================================================================
+    // PAYMENTS - Transaction History
+    // ============================================================================
+    "payments": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["userId", "driverId", "status", "createdAt"],
+
+      "$paymentId": {
+        ".validate": "newData.hasChildren(['userId', 'amount', 'status', 'createdAt'])",
+        ".write": "(newData.child('userId').val() === auth.uid && !data.exists()) || root.child('admins').child(auth.uid).val() === true",
+
+        "userId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+
+        "tripId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+
+        "driverId": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length > 0)"
+        },
+
+        "amount": {
+          ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 100000"
+        },
+
+        "paymentMethod": {
+          ".validate": "newData.isString() && (newData.val() === 'cash' || newData.val() === 'card' || newData.val() === 'wallet')"
+        },
+
+        "status": {
+          ".validate": "newData.isString() && (newData.val() === 'pending' || newData.val() === 'completed' || newData.val() === 'failed' || newData.val() === 'refunded')"
+        },
+
+        "transactionId": {
+          ".validate": "newData.isNull() || (newData.isString() && newData.val().length > 0)"
+        },
+
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "!data.exists()"
+        },
+
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}

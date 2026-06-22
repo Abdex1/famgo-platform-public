@@ -1,0 +1,538 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: famgo
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-config
+  namespace: famgo
+data:
+  LOG_LEVEL: "info"
+  ENV: "production"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DB_USER: "app_user"
+  DB_NAME: "famgo_platform"
+  REDIS_URL: "redis://redis:6379"
+  KAFKA_BROKERS: "kafka:29092"
+  JAEGER_URL: "http://jaeger:14268/api/traces"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: service-secrets
+  namespace: famgo
+type: Opaque
+stringData:
+  DB_PASSWORD: "app_password"
+  JWT_SECRET: "your-super-secret-key-minimum-32-characters-long"
+  TELEBIRR_API_KEY: "test_key"
+  CHAPA_API_KEY: "test_key"
+
+---
+# PostgreSQL Deployment
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: famgo
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: service-config
+              key: DB_USER
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: service-config
+              key: DB_NAME
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: service-secrets
+              key: DB_PASSWORD
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U app_user
+          initialDelaySeconds: 30
+          periodSeconds: 10
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: famgo
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+  clusterIP: None
+
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: famgo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        command:
+        - redis-server
+        - --appendonly
+        - "yes"
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: redis-storage
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: famgo
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+
+---
+# Kafka Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: famgo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+      - name: kafka
+        image: confluentinc/cp-kafka:7.5.0
+        ports:
+        - containerPort: 9092
+        - containerPort: 29092
+        env:
+        - name: KAFKA_BROKER_ID
+          value: "1"
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: "zookeeper:2181"
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092"
+        - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+          value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+        - name: KAFKA_INTER_BROKER_LISTENER_NAME
+          value: "PLAINTEXT"
+        - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+          value: "1"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: famgo
+spec:
+  selector:
+    app: kafka
+  ports:
+  - name: broker
+    port: 29092
+    targetPort: 29092
+  - name: client
+    port: 9092
+    targetPort: 9092
+
+---
+# Payment Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: famgo
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+      - name: payment-service
+        image: famgo/payment-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5006
+          name: grpc
+        envFrom:
+        - configMapRef:
+            name: service-config
+        - secretRef:
+            name: service-secrets
+        env:
+        - name: SERVICE_NAME
+          value: payment-service
+        - name: GRPC_PORT
+          value: "5006"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - test -f /tmp/healthy || exit 1
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - test -f /tmp/ready || exit 1
+          initialDelaySeconds: 15
+          periodSeconds: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: famgo
+spec:
+  type: ClusterIP
+  selector:
+    app: payment-service
+  ports:
+  - protocol: TCP
+    port: 5006
+    targetPort: 5006
+
+---
+# Wallet Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wallet-service
+  namespace: famgo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: wallet-service
+  template:
+    metadata:
+      labels:
+        app: wallet-service
+    spec:
+      containers:
+      - name: wallet-service
+        image: famgo/wallet-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5007
+          name: grpc
+        envFrom:
+        - configMapRef:
+            name: service-config
+        - secretRef:
+            name: service-secrets
+        env:
+        - name: SERVICE_NAME
+          value: wallet-service
+        - name: GRPC_PORT
+          value: "5007"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wallet-service
+  namespace: famgo
+spec:
+  type: ClusterIP
+  selector:
+    app: wallet-service
+  ports:
+  - protocol: TCP
+    port: 5007
+    targetPort: 5007
+
+---
+# Safety Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: safety-service
+  namespace: famgo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: safety-service
+  template:
+    metadata:
+      labels:
+        app: safety-service
+    spec:
+      containers:
+      - name: safety-service
+        image: famgo/safety-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5008
+          name: grpc
+        envFrom:
+        - configMapRef:
+            name: service-config
+        - secretRef:
+            name: service-secrets
+        env:
+        - name: SERVICE_NAME
+          value: safety-service
+        - name: GRPC_PORT
+          value: "5008"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: safety-service
+  namespace: famgo
+spec:
+  type: ClusterIP
+  selector:
+    app: safety-service
+  ports:
+  - protocol: TCP
+    port: 5008
+    targetPort: 5008
+
+---
+# Fraud Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-service
+  namespace: famgo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fraud-service
+  template:
+    metadata:
+      labels:
+        app: fraud-service
+    spec:
+      containers:
+      - name: fraud-service
+        image: famgo/fraud-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5009
+          name: grpc
+        envFrom:
+        - configMapRef:
+            name: service-config
+        - secretRef:
+            name: service-secrets
+        env:
+        - name: SERVICE_NAME
+          value: fraud-service
+        - name: GRPC_PORT
+          value: "5009"
+        - name: HIGH_RISK_THRESHOLD
+          value: "0.75"
+        - name: MEDIUM_RISK_THRESHOLD
+          value: "0.5"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fraud-service
+  namespace: famgo
+spec:
+  type: ClusterIP
+  selector:
+    app: fraud-service
+  ports:
+  - protocol: TCP
+    port: 5009
+    targetPort: 5009
+
+---
+# HorizontalPodAutoscaler for Payment Service
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: payment-service-hpa
+  namespace: famgo
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: payment-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# HorizontalPodAutoscaler for Fraud Service
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: fraud-service-hpa
+  namespace: famgo
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fraud-service
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

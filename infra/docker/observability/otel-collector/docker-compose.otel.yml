@@ -1,0 +1,27 @@
+
+# FILE
+
+# id="u1t61f"
+# infra/docker/observability/otel-collector/docker-compose.otel.yml
+
+
+# IMPLEMENTATION
+
+# id="yjlwmr"
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+
+    container_name: famgo-otel-collector
+
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+
+    volumes:
+      - ./config.yaml:/etc/otelcol-contrib/config.yaml
+
+    ports:
+      - "${OTEL_GRPC_PORT}:4317"
+      - "${OTEL_HTTP_PORT}:4318"
+
+    networks:
+      - famgo-observability

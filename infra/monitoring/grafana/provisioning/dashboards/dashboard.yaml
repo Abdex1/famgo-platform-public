@@ -1,0 +1,21 @@
+apiVersion: 1
+
+providers:
+  - name: 'FamGo Dashboards'
+    orgId: 1
+    folder: 'FamGo Platform'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 60
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+
+  - name: 'System Dashboards'
+    orgId: 1
+    folder: 'Infrastructure'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 60
+    options:
+      path: /etc/grafana/provisioning/dashboards/infrastructure

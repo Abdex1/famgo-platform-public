@@ -1,0 +1,143 @@
+openapi: 3.0.3
+info:
+  title: FamGo Dispatch Service API
+  version: 1.0.0
+  description: REST surface for ride matching and driver discovery.
+servers:
+  - url: http://localhost:8085
+    description: Local development
+paths:
+  /v1/health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      tags: [Operations]
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /v1/dispatch/match:
+    post:
+      summary: Match a ride to nearby drivers
+      operationId: matchRide
+      tags: [Dispatch]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchRideRequest"
+      responses:
+        "200":
+          description: Match result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchRideResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "429":
+          description: Rate limit exceeded
+  /v1/dispatch/nearby-drivers:
+    post:
+      summary: List nearby online drivers
+      operationId: getNearbyDrivers
+      tags: [Dispatch]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NearbyDriversRequest"
+      responses:
+        "200":
+          description: Nearby drivers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NearbyDriversResponse"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        service:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    MatchRideRequest:
+      type: object
+      required: [ride_id, rider_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng]
+      properties:
+        ride_id:
+          type: string
+        rider_id:
+          type: string
+        pickup_lat:
+          type: number
+          format: double
+        pickup_lng:
+          type: number
+          format: double
+        dropoff_lat:
+          type: number
+          format: double
+        dropoff_lng:
+          type: number
+          format: double
+        ride_type:
+          type: string
+    MatchRideResponse:
+      type: object
+      properties:
+        dispatch_request_id:
+          type: string
+        ride_id:
+          type: string
+        assigned_driver_id:
+          type: string
+        status:
+          type: string
+        proposed_drivers:
+          type: array
+          items:
+            type: string
+        matched_at:
+          type: string
+          format: date-time
+    NearbyDriversRequest:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+    NearbyDriversResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        drivers:
+          type: array
+          items:
+            type: object

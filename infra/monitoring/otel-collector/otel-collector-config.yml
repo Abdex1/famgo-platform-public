@@ -1,0 +1,36 @@
+
+# OTEL COLLECTOR CONFIG
+
+ # infra/monitoring/otel-collector/otel-collector-config.yaml
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch:
+
+exporters:
+  debug:
+
+  prometheus:
+    endpoint: "0.0.0.0:9464"
+
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, jaeger]
+
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]

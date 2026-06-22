@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package ride;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/FamGo/platform/services/ride-service/proto/ride";
+
+service RideService {
+  rpc CreateRide(CreateRideRequest) returns (CreateRideResponse);
+  rpc AcceptRide(AcceptRideRequest) returns (google.protobuf.Empty);
+  rpc GetRide(GetRideRequest) returns (GetRideResponse);
+  rpc UpdateRideStatus(UpdateRideStatusRequest) returns (google.protobuf.Empty);
+  rpc CompleteRide(CompleteRideRequest) returns (google.protobuf.Empty);
+  rpc CancelRide(CancelRideRequest) returns (google.protobuf.Empty);
+  rpc ListRides(ListRidesRequest) returns (ListRidesResponse);
+}
+
+message CreateRideRequest {
+  string rider_id = 1;
+  double pickup_latitude = 2;
+  double pickup_longitude = 3;
+  double dropoff_latitude = 4;
+  double dropoff_longitude = 5;
+  string pickup_address = 6;
+  string dropoff_address = 7;
+  string payment_method = 8;
+  int32 passenger_count = 9;
+}
+
+message CreateRideResponse {
+  string ride_id = 1;
+  double estimated_distance = 2;
+  double estimated_duration_minutes = 3;
+  double estimated_fare = 4;
+}
+
+message AcceptRideRequest {
+  string ride_id = 1;
+  string driver_id = 2;
+}
+
+message GetRideRequest {
+  string ride_id = 1;
+}
+
+message GetRideResponse {
+  string ride_id = 1;
+  string rider_id = 2;
+  string driver_id = 3;
+  string status = 4;
+  double estimated_distance = 5;
+  double estimated_fare = 6;
+  double actual_fare = 7;
+  google.protobuf.Timestamp requested_at = 8;
+  string pickup_address = 9;
+  string dropoff_address = 10;
+  int32 driver_rating = 11;
+}
+
+message UpdateRideStatusRequest {
+  string ride_id = 1;
+  string status = 2;
+}
+
+message CompleteRideRequest {
+  string ride_id = 1;
+  double actual_distance = 2;
+  double actual_fare = 3;
+  int32 driver_rating = 4;
+}
+
+message CancelRideRequest {
+  string ride_id = 1;
+  string reason = 2;
+}
+
+message ListRidesRequest {
+  string rider_id = 1;
+  int32 limit = 2;
+}
+
+message RideInfo {
+  string ride_id = 1;
+  string status = 2;
+  double estimated_fare = 3;
+  google.protobuf.Timestamp requested_at = 4;
+}
+
+message ListRidesResponse {
+  repeated RideInfo rides = 1;
+  int32 total = 2;
+}

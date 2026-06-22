@@ -1,0 +1,121 @@
+name: Deploy to Kubernetes
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'services/**'
+      - 'infra/kubernetes/**'
+      - '.github/workflows/k8s-deploy.yaml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  KUBECONFIG: ${{ secrets.KUBE_CONFIG }}
+
+jobs:
+  deploy-staging:
+    if: github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'staging'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Configure kubectl
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+      
+      - name: Apply namespace
+        run: kubectl apply -f infra/kubernetes/base/namespace.yaml
+      
+      - name: Apply ConfigMaps and Secrets
+        run: |
+          kubectl apply -f infra/kubernetes/base/config-secrets.yaml
+      
+      - name: Apply RBAC
+        run: kubectl apply -f infra/kubernetes/base/rbac.yaml
+      
+      - name: Apply manifests
+        run: |
+          kubectl apply -f infra/kubernetes/base/auth-service-complete.yaml
+          kubectl apply -f infra/kubernetes/base/postgres.yaml
+          kubectl apply -f infra/kubernetes/base/redis.yaml
+      
+      - name: Wait for deployment
+        run: |
+          kubectl rollout status deployment/auth-service -n famgo-platform --timeout=5m
+      
+      - name: Verify pods
+        run: kubectl get pods -n famgo-platform
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main' && github.event.inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Configure kubectl
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_PROD }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+      
+      - name: Check cluster health
+        run: kubectl cluster-info
+      
+      - name: Create backup of current state
+        run: |
+          kubectl get all -n famgo-platform -o yaml > backup-${{ github.run_number }}.yaml
+      
+      - name: Apply namespace
+        run: kubectl apply -f infra/kubernetes/base/namespace.yaml
+      
+      - name: Apply ConfigMaps and Secrets
+        run: kubectl apply -f infra/kubernetes/base/config-secrets.yaml
+      
+      - name: Apply RBAC
+        run: kubectl apply -f infra/kubernetes/base/rbac.yaml
+      
+      - name: Blue-Green Deployment
+        run: |
+          # Apply new manifests
+          kubectl apply -f infra/kubernetes/base/auth-service-complete.yaml
+          
+          # Wait for rollout
+          kubectl rollout status deployment/auth-service -n famgo-platform --timeout=10m
+          
+          # Verify health
+          kubectl get pods -n famgo-platform
+      
+      - name: Smoke test
+        run: |
+          POD=$(kubectl get pods -n famgo-platform -l app=auth-service -o jsonpath='{.items[0].metadata.name}')
+          kubectl exec -n famgo-platform $POD -- wget -O- http://localhost:8080/health || exit 1
+      
+      - name: Notify deployment
+        if: success()
+        run: echo "Production deployment successful"
+      
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          kubectl rollout undo deployment/auth-service -n famgo-platform
+          kubectl rollout status deployment/auth-service -n famgo-platform --timeout=5m

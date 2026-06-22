@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Profile images: only authenticated users can upload/download their own
+    match /profile_images/{userId}/{allPaths=**} {
+      allow read: if request.auth.uid == userId;
+      
+      allow write: if 
+        request.auth.uid == userId
+        && request.resource.size < 5 * 1024 * 1024 // 5MB max
+        && request.resource.contentType.matches('image/(jpg|jpeg|png|gif|webp)');
+        
+      allow delete: if request.auth.uid == userId;
+    }
+
+    // Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

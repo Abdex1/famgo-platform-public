@@ -1,0 +1,28 @@
+
+# 18. BUILD KONG API GATEWAY
+
+# FILE
+
+# id="t2vrb4"
+# infra/docker/networking/kong/docker-compose.kong.yml
+
+
+# IMPLEMENTATION
+
+# id="7o6mf4"
+services:
+  kong:
+    image: kong:latest
+
+    container_name: famgo-kong
+
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+
+    ports:
+      - "${KONG_PROXY_PORT}:8000"
+      - "${KONG_ADMIN_PORT}:8001"
+
+    networks:
+      - famgo-core

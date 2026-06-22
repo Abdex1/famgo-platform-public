@@ -1,0 +1,232 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  # Core Services (Go + gRPC)
+  - name: auth-service
+    protocol: grpc
+    host: auth-service
+    port: 5001
+    
+  - name: ride-service
+    protocol: grpc
+    host: ride-service
+    port: 5001
+    
+  - name: user-service
+    protocol: grpc
+    host: user-service
+    port: 5001
+    
+  - name: driver-service
+    protocol: grpc
+    host: driver-service
+    port: 5001
+    
+  - name: dispatch-service
+    protocol: grpc
+    host: dispatch-service
+    port: 5001
+    
+  - name: pooling-service
+    protocol: grpc
+    host: pooling-service
+    port: 5001
+    
+  - name: pricing-service
+    protocol: grpc
+    host: pricing-service
+    port: 5001
+    
+  - name: gps-service
+    protocol: grpc
+    host: gps-service
+    port: 5001
+    
+  - name: payment-service
+    protocol: grpc
+    host: payment-service
+    port: 5001
+    
+  - name: wallet-service
+    protocol: grpc
+    host: wallet-service
+    port: 5001
+    
+  - name: safety-service
+    protocol: grpc
+    host: safety-service
+    port: 5001
+    
+  - name: fraud-service
+    protocol: grpc
+    host: fraud-service
+    port: 5001
+
+  # Realtime Services (Node.js)
+  - name: websocket-gateway
+    url: http://websocket-gateway:3000
+    
+  - name: notification-service
+    url: http://notification-service:3000
+
+  # ML Services (Python)
+  - name: demand-prediction-service
+    url: http://demand-prediction-service:8080
+    
+  - name: eta-prediction-service
+    url: http://eta-prediction-service:8080
+    
+  - name: surge-prediction-service
+    url: http://surge-prediction-service:8080
+    
+  - name: fraud-detection-ml
+    url: http://fraud-detection-ml:8080
+    
+  - name: pooling-optimization-ml
+    url: http://pooling-optimization-ml:8080
+
+routes:
+  # Auth Endpoints
+  - name: auth-login
+    service: auth-service
+    protocols: [http, https]
+    methods: [POST]
+    paths: [/auth/login]
+    strip_path: false
+    
+  - name: auth-register
+    service: auth-service
+    protocols: [http, https]
+    methods: [POST]
+    paths: [/auth/register]
+    strip_path: false
+    
+  - name: auth-verify
+    service: auth-service
+    protocols: [http, https]
+    methods: [POST]
+    paths: [/auth/verify]
+    strip_path: false
+
+  # Ride Endpoints
+  - name: ride-create
+    service: ride-service
+    protocols: [http, https]
+    methods: [POST]
+    paths: [/rides]
+    strip_path: false
+    
+  - name: ride-get
+    service: ride-service
+    protocols: [http, https]
+    methods: [GET]
+    paths: [/rides/.*]
+    regex_priority: 100
+    strip_path: false
+    
+  - name: ride-update
+    service: ride-service
+    protocols: [http, https]
+    methods: [PATCH]
+    paths: [/rides/.*]
+    regex_priority: 100
+    strip_path: false
+
+  # Dispatch Endpoints
+  - name: dispatch-match
+    service: dispatch-service
+    protocols: [http, https]
+    methods: [POST]
+    paths: [/dispatch/match]
+    strip_path: false
+    
+  # GPS Endpoints
+  - name: gps-location
+    service: gps-service
+    protocols: [http, https, ws, wss]
+    methods: [POST, GET]
+    paths: [/gps/location]
+    strip_path: false
+
+  # WebSocket Endpoints
+  - name: ws-connect
+    service: websocket-gateway
+    protocols: [ws, wss]
+    paths: [/ws/.*]
+    regex_priority: 100
+    strip_path: false
+
+  # ML Prediction Endpoints
+  - name: demand-predict
+    service: demand-prediction-service
+    protocols: [http, https]
+    methods: [POST]
+    paths: [/api/v1/predict/demand]
+    strip_path: false
+    
+  - name: eta-predict
+    service: eta-prediction-service
+    protocols: [http, https]
+    methods: [POST]
+    paths: [/api/v1/predict/eta]
+    strip_path: false
+
+plugins:
+  # JWT Authentication
+  - name: jwt
+    protocols: [http, https, grpc, grpcs]
+    config:
+      key_claim_name: sub
+      secret_is_base64: false
+      uri_param_names: [jwt]
+      cookie_names: [jwt]
+
+  # Rate Limiting (1000 requests per minute)
+  - name: rate-limiting
+    config:
+      minute: 1000
+      hour: 60000
+      policy: local
+      fault_tolerant: true
+
+  # CORS
+  - name: cors
+    config:
+      origins: ["*"]
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+      headers: ["Accept", "Accept-Version", "Content-Length", "Content-MD5", "Content-Type", "Date", "X-Auth-Token", "Authorization"]
+      exposed_headers: ["X-Auth-Token", "X-Total-Count"]
+      credentials: true
+      max_age: 3600
+
+  # Logging
+  - name: http-log
+    config:
+      http_endpoint: "http://logging-service:9200/"
+      method: "POST"
+      flush_timeout: 2
+
+  # Request/Response Transformer
+  - name: request-transformer
+    config:
+      add:
+        headers: ["X-Service-ID:kong"]
+      rename:
+        headers: []
+
+upstreams:
+  - name: auth-service-upstream
+    targets:
+      - target: auth-service:5001
+        weight: 100
+        
+  - name: ride-service-upstream
+    targets:
+      - target: ride-service:5001
+        weight: 100
+
+consumers:
+  - username: service-account
+    acls:
+      - group: service

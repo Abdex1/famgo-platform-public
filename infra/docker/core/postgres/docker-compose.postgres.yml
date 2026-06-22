@@ -1,0 +1,38 @@
+
+# 7. BUILD POSTGRES BASELINE
+
+# id="txgw6h"
+# infra/docker/core/postgres/docker-compose.postgres.yml
+
+
+# IMPLEMENTATION
+
+# yaml id="n4ll0k"
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: famgo-postgres
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "${POSTGRES_PORT}:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - famgo-core
+
+volumes:
+  postgres-data:

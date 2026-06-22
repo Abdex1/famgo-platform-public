@@ -1,0 +1,25 @@
+
+# 12. BUILD LOKI
+
+# FILE
+
+# id="aog4pf"
+# infra/docker/observability/loki/docker-compose.loki.yml
+
+
+# IMPLEMENTATION
+
+# id="oqd0ce"
+services:
+  loki:
+    image: grafana/loki:latest
+
+    container_name: famgo-loki
+
+    ports:
+      - "${LOKI_PORT}:3100"
+
+    command: -config.file=/etc/loki/local-config.yaml
+
+    networks:
+      - famgo-observability

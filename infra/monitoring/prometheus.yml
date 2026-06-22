@@ -1,0 +1,170 @@
+# Prometheus Configuration for FamGo Platform
+# ============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'famgo-platform'
+    environment: 'development'
+
+# ============================================================================
+# ALERTMANAGER CONFIGURATION
+# ============================================================================
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# ============================================================================
+# ALERT RULES
+# ============================================================================
+rule_files:
+  - '/etc/prometheus/rules/*.yml'
+
+# ============================================================================
+# SCRAPE CONFIGURATIONS
+# ============================================================================
+scrape_configs:
+
+  # ========================================================================
+  # PROMETHEUS SELF MONITORING
+  # ========================================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # ========================================================================
+  # SERVICES MONITORING
+  # ========================================================================
+  
+  # Auth Service
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # User Service
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['user-service:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Ride Service
+  - job_name: 'ride-service'
+    static_configs:
+      - targets: ['ride-service:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Dispatch Service
+  - job_name: 'dispatch-service'
+    static_configs:
+      - targets: ['dispatch-service:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # GPS Service
+  - job_name: 'gps-service'
+    static_configs:
+      - targets: ['gps-service:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 5s  # More frequent for real-time data
+
+  # API Gateway
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # ========================================================================
+  # INFRASTRUCTURE MONITORING
+  # ========================================================================
+  
+  # PostgreSQL via PostgreSQL Exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+
+  # Redis via Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+
+  # Kafka via Kafka Exporter
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka-exporter:9192']
+    scrape_interval: 30s
+
+  # Docker Containers
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['localhost:9323']
+    scrape_interval: 15s
+
+  # Node Exporter (if using VM or physical server)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # ========================================================================
+  # DATABASE MONITORING
+  # ========================================================================
+  
+  # ClickHouse Metrics
+  - job_name: 'clickhouse'
+    static_configs:
+      - targets: ['clickhouse:8123']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # ========================================================================
+  # APPLICATION METRICS VIA PUSHGATEWAY
+  # ========================================================================
+  # For batch jobs and short-lived processes
+  - job_name: 'pushgateway'
+    static_configs:
+      - targets: ['pushgateway:9091']
+    scrape_interval: 15s
+
+  # ========================================================================
+  # SERVICE DISCOVERY (if using Kubernetes)
+  # ========================================================================
+  # Uncomment for Kubernetes:
+  # - job_name: 'kubernetes-apiservers'
+  #   kubernetes_sd_configs:
+  #     - role: endpoints
+  #   scheme: https
+  #   tls_config:
+  #     ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+  #   bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  #   relabel_configs:
+  #     - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+  #       action: keep
+  #       regex: default;kubernetes;https
+
+# ============================================================================
+# REMOTE STORAGE (Optional - for long-term storage)
+# ============================================================================
+# remote_write:
+#   - url: "http://remote-storage:1234/api/v1/write"
+#     queue_config:
+#       capacity: 10000
+#       max_shards: 200
+#       min_shards: 1
+#       max_samples_per_send: 1000
+#       batch_send_wait: 5s
+#       min_backoff: 30ms
+#       max_backoff: 100ms
+
+# ============================================================================
+# END OF CONFIGURATION
+# ============================================================================

@@ -1,0 +1,26 @@
+
+# 15. BUILD GRAFANA
+
+# FILE
+
+# id="z75eqs"
+# infra/docker/observability/grafana/docker-compose.grafana.yml
+
+
+# IMPLEMENTATION
+# id="wjlwmr"
+services:
+  grafana:
+    image: grafana/grafana:latest
+
+    container_name: famgo-grafana
+
+    ports:
+      - "${GRAFANA_PORT}:3000"
+
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+
+    networks:
+      - famgo-observability

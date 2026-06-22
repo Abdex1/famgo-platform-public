@@ -1,0 +1,74 @@
+# ============================================================================
+# FamGo Project .editorconfig
+# Enforce consistent coding styles across editors/IDEs
+# ============================================================================
+
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Go source files
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# TypeScript / JavaScript / React
+[*.js]
+indent_style = space
+indent_size = 2
+[*.jsx]
+indent_style = space
+indent_size = 2
+[*.ts]
+indent_style = space
+indent_size = 2
+[*.tsx]
+indent_style = space
+indent_size = 2
+
+# JSON, YAML, TOML, ENV
+[*.json]
+indent_style = space
+indent_size = 2
+[*.yaml]
+indent_style = space
+indent_size = 2
+[*.yml]
+indent_style = space
+indent_size = 2
+[*.toml]
+indent_style = space
+indent_size = 2
+[*.env]
+end_of_line = lf
+
+# Markdown / Documentation
+[*.md]
+trim_trailing_whitespace = false
+indent_style = space
+indent_size = 2
+
+# Shell scripts
+[*.sh]
+indent_style = space
+indent_size = 2
+
+# PowerShell scripts
+[*.ps1]
+indent_style = space
+indent_size = 2
+
+# HTML / CSS
+[*.html]
+indent_style = space
+indent_size = 2
+[*.css]
+indent_style = space
+indent_size = 2

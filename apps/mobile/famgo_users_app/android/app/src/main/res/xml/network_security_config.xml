@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+Network Security Configuration
+Enforces HTTPS for all Firebase communication
+Prevents man-in-the-middle attacks during authentication
+-->
+<network-security-config>
+    <!-- Firebase services require HTTPS -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">firebase.googleapis.com</domain>
+        <domain includeSubdomains="true">firebaseio.com</domain>
+        <domain includeSubdomains="true">firebaseapp.com</domain>
+        <domain includeSubdomains="true">googleapis.com</domain>
+        <domain includeSubdomains="true">google-analytics.com</domain>
+    </domain-config>
+    
+    <!-- Allow cleartext only for localhost testing (development only) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+    </domain-config>
+    
+    <!-- Default policy: require HTTPS everywhere else -->
+    <default-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Use system-provided trust anchors -->
+            <certificates src="system" />
+            <!-- Optional: Add user-provided certificates for corporate proxies
+            <certificates src="user" />
+            -->
+        </trust-anchors>
+    </default-config>
+</network-security-config>

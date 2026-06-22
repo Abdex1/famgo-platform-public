@@ -1,0 +1,18 @@
+
+// PHASE 4 — PROMETHEUS DASHBOARDS
+
+// =========================================================
+
+// STEP 11 — CREATE GRAFANA DASHBOARD
+
+
+//infra/monitoring/grafana/dashboards/auth-dashboard.json
+
+login success rate
+login failures
+otp verification failures
+token refresh rate
+JWT validation latency
+active sessions
+revoked tokens
+RBAC denials

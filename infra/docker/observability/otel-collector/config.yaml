@@ -1,0 +1,26 @@
+
+# 14. BUILD OTEL COLLECTOR
+
+# FILE
+
+# id="ij1c1g"
+# infra/docker/observability/otel-collector/config.yaml
+
+
+# IMPLEMENTATION
+
+# id="u3vwcs"
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+exporters:
+  debug:
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [debug]

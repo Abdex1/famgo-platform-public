@@ -1,0 +1,78 @@
+name: Build & Test
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: famgo
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: famgo_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - user-service
+          - ride-service
+          - dispatch-service
+          - gps-service
+          - api-gateway
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: services/${{ matrix.service }}/go.sum
+      
+      - name: Run tests
+        run: cd services/${{ matrix.service }} && go test -v -race -coverprofile=coverage.out ./...
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./services/${{ matrix.service }}/coverage.out
+          flags: ${{ matrix.service }}
+      
+      - name: Build binary
+        run: cd services/${{ matrix.service }} && go build -o bin/${{ matrix.service }} .
+      
+      - name: Run linter
+        uses: golangci/golangci-lint-action@v3
+        with:
+          working-directory: services/${{ matrix.service }}
+          version: latest
+          args: --timeout 5m

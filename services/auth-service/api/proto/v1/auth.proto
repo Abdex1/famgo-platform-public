@@ -1,0 +1,262 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "github.com/Abdex1/FamGo-platform/services/auth-service/api/auth/v1";
+//pb "github.com/Abdex1/FamGo-platform/services/auth-service/api/auth/v1"
+// Auth service for authentication and authorization
+service AuthService {
+  // User authentication
+  rpc Login(LoginRequest) returns (AuthResponse);
+  rpc Register(RegisterRequest) returns (AuthResponse);
+  rpc VerifyToken(VerifyTokenRequest) returns (TokenClaimsResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (TokenResponse);
+  
+  // Session management
+  rpc CreateSession(CreateSessionRequest) returns (SessionResponse);
+  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse);
+  
+  // Device management
+  rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceResponse);
+  rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse);
+  
+  // OTP management
+  rpc GenerateOTP(GenerateOTPRequest) returns (GenerateOTPResponse);
+  rpc VerifyOTP(VerifyOTPRequest) returns (VerifyOTPResponse);
+  
+  // MFA management
+  rpc EnableMFA(EnableMFARequest) returns (EnableMFAResponse);
+  rpc VerifyMFA(VerifyMFARequest) returns (VerifyMFAResponse);
+  rpc DisableMFA(DisableMFARequest) returns (DisableMFAResponse);
+  
+  // RBAC
+  rpc GetRBAC(GetRBACRequest) returns (GetRBACResponse);
+  rpc UpdateRBAC(UpdateRBACRequest) returns (UpdateRBACResponse);
+  
+  // Health
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+// Login
+message LoginRequest {
+  string phone = 1;
+  string password = 2;
+  string device_id = 3;
+  string ip_address = 4;
+  string user_agent = 5;
+}
+
+message AuthResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;
+  UserProfile user = 4;
+  SessionData session = 5;
+}
+
+// Register
+message RegisterRequest {
+  string phone = 1;
+  string email = 2;
+  string password = 3;
+  string full_name = 4;
+  string device_id = 5;
+  string fingerprint = 6;
+}
+
+// Token verification
+message VerifyTokenRequest {
+  string token = 1;
+}
+
+message TokenClaimsResponse {
+  string user_id = 1;
+  string phone = 2;
+  string email = 3;
+  repeated string roles = 4;
+  bool mfa_verified = 5;
+  int64 expires_at = 6;
+}
+
+// Refresh token
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message TokenResponse {
+  string access_token = 1;
+  int64 expires_in = 2;
+}
+
+// Session management
+message CreateSessionRequest {
+  string user_id = 1;
+  string device_id = 2;
+  string device_name = 3;
+  string ip_address = 4;
+  string user_agent = 5;
+  string fingerprint = 6;
+}
+
+message SessionResponse {
+  string id = 1;
+  string user_id = 2;
+  string device_id = 3;
+  int64 created_at = 4;
+  int64 expires_at = 5;
+}
+
+message SessionData {
+  string id = 1;
+  string device_id = 2;
+}
+
+message ValidateSessionRequest {
+  string session_id = 1;
+}
+
+message ValidateSessionResponse {
+  bool valid = 1;
+  string user_id = 2;
+  int64 expires_at = 3;
+}
+
+message LogoutRequest {
+  string session_id = 1;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+message RevokeAllSessionsRequest {
+  string user_id = 1;
+}
+
+message RevokeAllSessionsResponse {
+  bool success = 1;
+  int32 revoked_count = 2;
+}
+
+// Device management
+message RegisterDeviceRequest {
+  string user_id = 1;
+  string device_id = 2;
+  string device_name = 3;
+  string device_type = 4; // ios, android, web
+  string fingerprint = 5;
+  string os_version = 6;
+  string app_version = 7;
+}
+
+message RegisterDeviceResponse {
+  bool success = 1;
+  string device_id = 2;
+}
+
+message ListDevicesRequest {
+  string user_id = 1;
+}
+
+message Device {
+  string id = 1;
+  string device_name = 2;
+  string device_type = 3;
+  string fingerprint = 4;
+  bool trusted = 5;
+  int64 last_seen = 6;
+  int64 created_at = 7;
+}
+
+message ListDevicesResponse {
+  repeated Device devices = 1;
+}
+
+// OTP
+message GenerateOTPRequest {
+  string user_id = 1;
+  string phone = 2;
+}
+
+message GenerateOTPResponse {
+  string otp = 1;
+  int64 expires_at = 2;
+}
+
+message VerifyOTPRequest {
+  string user_id = 1;
+  string otp = 2;
+}
+
+message VerifyOTPResponse {
+  bool valid = 1;
+}
+
+// MFA
+message EnableMFARequest {
+  string user_id = 1;
+  string method = 2; // totp, sms, email
+}
+
+message EnableMFAResponse {
+  string secret = 1;
+  string qr_code = 2;
+  repeated string backup_codes = 3;
+}
+
+message VerifyMFARequest {
+  string user_id = 1;
+  string token = 2;
+}
+
+message VerifyMFAResponse {
+  bool valid = 1;
+}
+
+message DisableMFARequest {
+  string user_id = 1;
+}
+
+message DisableMFAResponse {
+  bool success = 1;
+}
+
+// RBAC
+message GetRBACRequest {
+  string user_id = 1;
+}
+
+message GetRBACResponse {
+  repeated string roles = 1;
+  map<string, bool> permissions = 2;
+}
+
+message UpdateRBACRequest {
+  string user_id = 1;
+  repeated string roles = 2;
+  map<string, bool> permissions = 3;
+}
+
+message UpdateRBACResponse {
+  bool success = 1;
+}
+
+// User Profile
+message UserProfile {
+  string id = 1;
+  string phone = 2;
+  string email = 3;
+  string full_name = 4;
+  int64 created_at = 5;
+  int64 updated_at = 6;
+}
+
+// Health
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1; // healthy, unhealthy
+  string version = 2;
+}

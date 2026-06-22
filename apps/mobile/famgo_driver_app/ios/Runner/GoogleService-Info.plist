@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>49351013128-4etp9ull1khldlfb9b4taaadoso2e30s.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.49351013128-4etp9ull1khldlfb9b4taaadoso2e30s</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>49351013128-1kc2glbaih81pu71ngkn8fp80uq0q9tv.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyD901XcUrv5BiOWOtwW0EhP4cvibEHkJeo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>49351013128</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.famgoDriversApp</string>
+	<key>PROJECT_ID</key>
+	<string>famgo-2fe7a</string>
+	<key>STORAGE_BUCKET</key>
+	<string>famgo-2fe7a.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:49351013128:ios:8831940aa4e2bd28a472bd</string>
+</dict>
+</plist>

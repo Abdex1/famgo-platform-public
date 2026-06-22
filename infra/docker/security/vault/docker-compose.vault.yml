@@ -1,0 +1,30 @@
+# 16. BUILD VAULT
+
+# FILE
+
+# id="ewktv4"
+# infra/docker/security/vault/docker-compose.vault.yml
+
+
+# IMPLEMENTATION
+
+# id="6c5tjt"
+services:
+  vault:
+    image: hashicorp/vault:latest
+
+    container_name: famgo-vault
+
+    cap_add:
+      - IPC_LOCK
+
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+
+    ports:
+      - "${VAULT_PORT}:8200"
+
+    command: server -dev
+
+    networks:
+      - famgo-security

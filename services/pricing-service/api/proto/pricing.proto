@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package pricing.v1;
+
+option go_package = "github.com/Abdex1/FamGo-platform/services/pricing-service/api/proto/pricing";
+
+// Pricing Service gRPC API
+service PricingService {
+  // Calculate fare for a ride
+  rpc CalculateFare(CalculateFareRequest) returns (CalculateFareResponse);
+  
+  // Get surge multiplier for a location
+  rpc GetSurgeMultiplier(GetSurgeMultiplierRequest) returns (GetSurgeMultiplierResponse);
+  
+  // Get pricing rules for a zone
+  rpc GetPricingRules(GetPricingRulesRequest) returns (GetPricingRulesResponse);
+}
+
+// Request/Response Messages
+
+message CalculateFareRequest {
+  string ride_id = 1;
+  double pickup_lat = 2;
+  double pickup_lon = 3;
+  double dropoff_lat = 4;
+  double dropoff_lon = 5;
+  string vehicle_type = 6; // CAR, MOTORCYCLE, etc.
+  string service_type = 7; // ECONOMY, PREMIUM, POOL, etc.
+}
+
+message CalculateFareResponse {
+  float base_fare = 1;
+  float distance_fare = 2;
+  float time_fare = 3;
+  float surge_multiplier = 4;
+  float total_fare = 5;
+  string currency = 6;
+}
+
+message GetSurgeMultiplierRequest {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+message GetSurgeMultiplierResponse {
+  float multiplier = 1;
+  int32 demand_level = 2; // 1-10 scale
+}
+
+message GetPricingRulesRequest {
+  string zone_id = 1;
+  string service_type = 2;
+}
+
+message GetPricingRulesResponse {
+  float base_fare = 1;
+  float distance_per_km = 2;
+  float time_per_minute = 3;
+  float minimum_fare = 4;
+  float cancellation_fee = 5;
+}

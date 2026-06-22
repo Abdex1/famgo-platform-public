@@ -1,0 +1,23 @@
+
+# FILE
+
+# id="jlwmr0"
+# infra/docker/observability/prometheus/docker-compose.prometheus.yml
+
+
+# IMPLEMENTATION
+# id="x82e1q"
+services:
+  prometheus:
+    image: prom/prometheus
+
+    container_name: famgo-prometheus
+
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+    networks:
+      - famgo-observability

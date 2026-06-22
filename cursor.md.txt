@@ -1,0 +1,230 @@
+how to run kafka locally:
+$env:KAFKA_ENABLED="true"
+$env:KAFKA_BROKERS="localhost:9092"
+$env:KAFKA_GROUP_ID="dispatch-service"
+go run ./services/dispatch-service/cmd/
+
+
+
+
+ use the my actual github path 'github.com/Abdex1/FamGo-platform'. based on the above results '' , proceed to fully buld all the services as outlined here, then after that you can, fully test to 100%. ''Then create specialized sprint prompts for each major FamGo service.
+
+Sprint 1 — Dispatch Service
+
+Inputs:
+
+FamGo Target Architecture
+Dispatch Domain Model
+Richxcame Realtime Analysis
+Autofleet Driver Matching Analysis
+Microbus Event Patterns
+
+Additional requirements:
+
+Driver discovery
+Driver ranking
+Assignment
+Reassignment
+Timeouts
+Matching sessions
+Future pooling support
+
+Expected outputs:
+
+services/dispatch-service
+
+assignment engine
+matching engine
+driver candidate engine
+dispatch saga integration
+Sprint 2 — Ride Service
+
+Inputs:
+
+FamGo Ride Domain
+Autofleet Ride Lifecycle
+Richxcame Ride Service
+Contracts Catalog
+
+Additional requirements:
+
+Ride state machine
+Ride lifecycle
+Fare snapshot
+Trip history
+Cancellation flows
+Sprint 3 — Notification Service
+
+Inputs:
+
+Richxcame Notification Analysis
+FamGo Event Catalog
+
+Additional requirements:
+
+Push
+SMS
+Email
+WhatsApp
+
+Template engine
+Retry engine
+DLQ integration
+Sprint 4 — Geo Service
+
+Inputs:
+
+Richxcame Geo Analysis
+RidePy Optimization Analysis
+
+Additional requirements:
+
+Distance calculations
+ETA calculations
+Geofencing
+Route optimization
+Sprint 5 — Event Bus Platform
+
+Inputs:
+
+Microbus Architecture Notes
+FamGo Contracts Catalog
+
+Additional requirements:
+
+Outbox
+DLQ
+Saga orchestration
+Retry policies
+Contract validation
+Schema versioning
+Sprint 6 — Pooling Service
+
+Inputs:
+
+RidePy Analysis
+Autofleet Workflow Analysis
+Dispatch Domain
+Ride Domain
+
+Additional requirements:
+
+Shared rides
+Vehicle capacity
+Route insertion
+Optimization
+Matching
+
+For your project, I would run the implementation waves in this order:
+
+Wave 1
+event-bus
+contracts
+outbox
+dlq
+sagas
+
+Wave 2
+ride-service
+dispatch-service
+
+Wave 3
+notification-service
+geo-service
+realtime-service
+
+Wave 4
+wallet-service
+payment-service
+subscription-service
+
+Wave 5
+pooling-service
+analytics-service
+ml integrations
+
+That sequence aligns directly with the adoption roadmap and minimizes architectural rework while extracting the maximum value from Richxcame, Autofleet, Microbus, OpenRide, and RidePy.'' 
+
+
+
+
+
+
+"Completed
+1. Fixed go.work / shared module
+Added shared/go.mod with valid path github.com/Abdex1/FamGo-platform/shared
+Implemented missing packages:
+shared/pkg/logger — structured stdout logger
+shared/pkg/observability — no-op metrics/tracer bootstrap
+shared/pkg/auth — Claims + AuthClient (removed broken middleware.go that imported auth-service internals)
+Added ./shared to go.work
+Added replace github.com/Abdex1/FamGo-platform/shared => ../../shared in auth, driver, and user go.mod
+Updated imports from invalid famgo/shared → github.com/Abdex1/FamGo-platform/shared
+Fixed packages/kafka-sdk/consumer/dlq_handler.go syntax error (/ → //)
+Root cause: famgo/shared is not a valid Go module path (missing dot in first element). Go tried to fetch it remotely and failed.
+
+2. Kafka producer wired (dispatch-service/cmd/main.go)
+KAFKA_ENABLED=true → RawKafkaPublisher + KafkaPublisher (replaces NoOpPublisher)
+Graceful shutdown closes Kafka writer
+3. Kafka consumer for ride.created.v1
+New internal/infrastructure/events/ride_created_consumer.go
+Bootstraps DispatchSagaHandler in a background goroutine when Kafka is enabled
+Parses event-bus envelope → ride.created.v1 → MatchRide
+4. Phase 1 architecture docs
+Created under docs/architecture/services/:
+
+ride-service.md
+auth-service.md
+payment-service.md
+geo-service.md
+notification-service.md
+(concepts from gap analysis / target architecture)
+
+5. REST handler alignment
+internal/interfaces/rest/dispatch_handler.go now uses DispatchUseCases.MatchRide and DriverCandidateEngine.FindWithinRadius instead of legacy MatchingAlgorithm stubs
+Build / test results
+Target	Result
+go work sync
+PASS
+go build ./shared/pkg/...
+PASS
+go build ./services/dispatch-service/cmd/ (workspace)
+PASS
+go test ./services/dispatch-service/internal/application/saga/...
+PASS
+go test ./services/dispatch-service/internal/domain/services/...
+PASS
+go build ./services/auth-service/cmd/main.go
+FAIL — pre-existing: userRepo.db unexported field access in auth.go:44
+GOWORK=off dispatch build
+FAIL — go.sum out of sync after partial go mod tidy; workspace build works
+Remaining blockers
+auth-service compile error — internal/service/auth.go references unexported userRepo.db (not introduced by this sprint)
+auth-service extra entrypoints — cmd/api, cmd/service use github.com/Abdex1/FamGo-platform/services/auth-service/... while module is famgo/auth-service
+driver-service import split — cmd/main.go uses famgo/driver-service, other files use github.com/Abdex1/FamGo-platform/services/driver-service
+Full workspace ./... build — many services still incomplete (missing packages, broken subpackages like dispatch internal/infrastructure/observability referencing non-existent telemetry/context)
+GOWORK=off dispatch — needs go mod tidy in dispatch-service with local replaces for redis-platform/telemetry, or continue using workspace builds
+How to run dispatch with Kafka locally
+$env:KAFKA_ENABLED="true"
+$env:KAFKA_BROKERS="localhost:9092"
+$env:KAFKA_GROUP_ID="dispatch-service"
+go run ./services/dispatch-service/cmd/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"

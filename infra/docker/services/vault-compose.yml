@@ -1,0 +1,41 @@
+
+# PHASE 3 — DOCKER VAULT CONTAINER
+
+---
+
+# STEP 3 — CREATE VAULT COMPOSE
+
+
+# infra/docker/services/vault-compose.yml
+
+services:
+  vault:
+    image: hashicorp/vault:1.19
+
+    container_name: famgo-vault
+
+    restart: unless-stopped
+
+    cap_add:
+      - IPC_LOCK
+
+    ports:
+      - "8200:8200"
+
+    environment:
+      VAULT_ADDR: http://0.0.0.0:8200
+
+    volumes:
+      - ../../security/vault/config:/vault/config
+      - vault-data:/vault/data
+
+    command: vault server -config=/vault/config/vault.hcl
+
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  vault-data:

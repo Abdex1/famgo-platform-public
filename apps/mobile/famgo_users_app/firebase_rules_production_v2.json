@@ -1,0 +1,470 @@
+{
+  "rules": {
+    // ============================================================================
+    // PRODUCTION-GRADE FIREBASE REALTIME DATABASE SECURITY RULES
+    // Version: 2.0.0 (Fixed for Firebase Syntax)
+    // ============================================================================
+    
+    ".read": false,
+    ".write": false,
+
+    // ============================================================================
+    // USERS COLLECTION - Passenger & Driver Profiles
+    // ============================================================================
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid && auth.uid != null",
+        ".write": "$uid === auth.uid && auth.uid != null",
+        ".indexOn": ["email", "phone", "blockStatus", "createdAt"],
+        ".validate": "newData.val().hasChild('id') && newData.val().hasChild('name') && newData.val().hasChild('email') && newData.val().hasChild('phone') && newData.val().hasChild('blockStatus')",
+
+        "id": {
+          ".validate": "newData.isString() && newData.val() === $uid && newData.val().length > 0",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "name": {
+          ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 100",
+          ".write": "$uid === auth.uid"
+        },
+
+        "email": {
+          ".validate": "newData.isString() && newData.val().length <= 254",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "phone": {
+          ".validate": "newData.isString() && newData.val().length >= 10 && newData.val().length <= 20",
+          ".write": "$uid === auth.uid"
+        },
+
+        "blockStatus": {
+          ".validate": "newData.isString() && (newData.val() === 'yes' || newData.val() === 'no')",
+          ".write": "root.child('admins').child(auth.uid).exists()"
+        },
+
+        "userType": {
+          ".validate": "newData.isString() && (newData.val() === 'passenger' || newData.val() === 'driver')",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "profileImage": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "address": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 200)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "city": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "emergencyContact": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "gender": {
+          ".validate": "!newData.exists() || (newData.isString() && (newData.val() === 'male' || newData.val() === 'female' || newData.val() === 'other'))",
+          ".write": "$uid === auth.uid"
+        },
+
+        "dateOfBirth": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length === 10)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "$uid === auth.uid"
+        },
+
+        "verificationStatus": {
+          ".validate": "newData.isString() && (newData.val() === 'verified' || newData.val() === 'pending' || newData.val() === 'rejected')",
+          ".write": "root.child('admins').child(auth.uid).exists()"
+        },
+
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    // ============================================================================
+    // DRIVERS COLLECTION - Driver-Specific Information
+    // ============================================================================
+    "drivers": {
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('drivers').child($uid).child('isAvailable').val() === true",
+        ".write": "$uid === auth.uid",
+        ".indexOn": ["isAvailable", "rating", "latitude", "longitude"],
+        ".validate": "newData.val().hasChild('licenseNumber') && newData.val().hasChild('vehicleNumber') && newData.val().hasChild('isAvailable')",
+
+        "licenseNumber": {
+          ".validate": "newData.isString() && newData.val().length >= 5 && newData.val().length <= 20",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "licenseExpiry": {
+          ".validate": "newData.isString() && newData.val().length === 10",
+          ".write": "$uid === auth.uid"
+        },
+
+        "vehicleNumber": {
+          ".validate": "newData.isString() && newData.val().length >= 5 && newData.val().length <= 20",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "vehicleType": {
+          ".validate": "newData.isString() && (newData.val() === 'car' || newData.val() === 'auto' || newData.val() === 'bike')",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "vehicleColor": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 50)",
+          ".write": "$uid === auth.uid"
+        },
+
+        "isAvailable": {
+          ".validate": "newData.isBoolean()",
+          ".write": "$uid === auth.uid"
+        },
+
+        "latitude": {
+          ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90",
+          ".write": "$uid === auth.uid"
+        },
+
+        "longitude": {
+          ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180",
+          ".write": "$uid === auth.uid"
+        },
+
+        "rating": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5",
+          ".write": "root.child('admins').child(auth.uid).exists()"
+        },
+
+        "totalTrips": {
+          ".validate": "newData.isNumber() && newData.val() >= 0",
+          ".write": "root.child('admins').child(auth.uid).exists()"
+        },
+
+        "deviceToken": {
+          ".validate": "newData.isString() && newData.val().length > 0",
+          ".write": "$uid === auth.uid"
+        },
+
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "$uid === auth.uid"
+        },
+
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    // ============================================================================
+    // ONLINE DRIVERS - Real-time Driver Availability (GeoFire)
+    // ============================================================================
+    "onlineDrivers": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": ["l", "g"],
+
+      "$driverId": {
+        ".validate": "$driverId === auth.uid",
+        ".write": "$driverId === auth.uid",
+
+        "g": {
+          ".validate": "newData.isString()"
+        },
+
+        "l": {
+          ".validate": "newData.val().length === 2 && newData.val()[0] >= -90 && newData.val()[0] <= 90 && newData.val()[1] >= -180 && newData.val()[1] <= 180"
+        }
+      }
+    },
+
+    // ============================================================================
+    // TRIP REQUESTS - Ride Request Management
+    // ============================================================================
+    "tripRequest": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["userID", "driverId", "status", "createdAt"],
+
+      "$tripId": {
+        ".validate": "newData.val().hasChild('userID') && newData.val().hasChild('pickUpLatLng') && newData.val().hasChild('dropOffLatLng') && newData.val().hasChild('status')",
+        ".write": "(newData.child('userID').val() === auth.uid && !data.exists()) || (data.exists() && (newData.child('driverId').val() === auth.uid || newData.child('userID').val() === auth.uid))",
+
+        "tripID": {
+          ".validate": "newData.isString() && newData.val() === $tripId"
+        },
+
+        "userID": {
+          ".validate": "newData.isString() && newData.val().length > 0",
+          ".write": "newData.val() === auth.uid && !data.exists()"
+        },
+
+        "userName": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 100"
+        },
+
+        "userPhone": {
+          ".validate": "newData.isString() && newData.val().length >= 10 && newData.val().length <= 20"
+        },
+
+        "pickUpLatLng": {
+          ".validate": "newData.val().hasChild('latitude') && newData.val().hasChild('longitude')",
+          "latitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
+          },
+          "longitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
+          }
+        },
+
+        "dropOffLatLng": {
+          ".validate": "newData.val().hasChild('latitude') && newData.val().hasChild('longitude')",
+          "latitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
+          },
+          "longitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
+          }
+        },
+
+        "pickUpAddress": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+
+        "dropOffAddress": {
+          ".validate": "newData.isString() && newData.val().length <= 200"
+        },
+
+        "vehicleType": {
+          ".validate": "newData.isString() && (newData.val() === 'car' || newData.val() === 'auto' || newData.val() === 'bike')"
+        },
+
+        "fareAmount": {
+          ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 100000"
+        },
+
+        "bidAmount": {
+          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() > 0 && newData.val() < 100000)"
+        },
+
+        "status": {
+          ".validate": "newData.isString() && (newData.val() === 'new' || newData.val() === 'accepted' || newData.val() === 'arrived' || newData.val() === 'ontrip' || newData.val() === 'ended' || newData.val() === 'cancelled')"
+        },
+
+        "driverId": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0)"
+        },
+
+        "driverName": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0)"
+        },
+
+        "driverPhone": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length >= 10)"
+        },
+
+        "driverPhoto": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
+        },
+
+        "carDetails": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
+        },
+
+        "driverLocation": {
+          ".validate": "!newData.exists() || (newData.val().hasChild('latitude') && newData.val().hasChild('longitude'))",
+          "latitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
+          },
+          "longitude": {
+            ".validate": "newData.isNumber() && newData.val() >= -180 && newData.val() <= 180"
+          }
+        },
+
+        "paymentMethod": {
+          ".validate": "!newData.exists() || (newData.isString() && (newData.val() === 'cash' || newData.val() === 'card' || newData.val() === 'wallet'))"
+        },
+
+        "publishDateTime": {
+          ".validate": "newData.isString() && newData.val().length > 0",
+          ".write": "!data.exists()"
+        },
+
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "!data.exists()"
+        },
+
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    // ============================================================================
+    // RATINGS & REVIEWS - Trip Feedback
+    // ============================================================================
+    "ratings": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": ["driverId", "userId", "createdAt"],
+
+      "$ratingId": {
+        ".validate": "newData.val().hasChild('userId') && newData.val().hasChild('driverId') && newData.val().hasChild('tripId') && newData.val().hasChild('rating')",
+
+        "userId": {
+          ".validate": "newData.isString() && newData.val() === auth.uid",
+          ".write": "!data.exists()"
+        },
+
+        "driverId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+
+        "tripId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+
+        "rating": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5"
+        },
+
+        "review": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
+        },
+
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "!data.exists()"
+        },
+
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    // ============================================================================
+    // PAYMENTS - Transaction History
+    // ============================================================================
+    "payments": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["userId", "driverId", "status", "createdAt"],
+
+      "$paymentId": {
+        ".validate": "newData.val().hasChild('userId') && newData.val().hasChild('amount') && newData.val().hasChild('status')",
+        ".write": "(newData.child('userId').val() === auth.uid && !data.exists()) || root.child('admins').child(auth.uid).exists()",
+
+        "userId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+
+        "tripId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+
+        "driverId": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0)"
+        },
+
+        "amount": {
+          ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 100000"
+        },
+
+        "paymentMethod": {
+          ".validate": "newData.isString() && (newData.val() === 'cash' || newData.val() === 'card' || newData.val() === 'wallet')"
+        },
+
+        "status": {
+          ".validate": "newData.isString() && (newData.val() === 'pending' || newData.val() === 'completed' || newData.val() === 'failed' || newData.val() === 'refunded')"
+        },
+
+        "transactionId": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0)"
+        },
+
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now",
+          ".write": "!data.exists()"
+        },
+
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    // ============================================================================
+    // ADMIN USERS - Admin Access Control
+    // ============================================================================
+    "admins": {
+      ".read": "root.child('admins').child(auth.uid).exists()",
+      ".write": false,
+
+      "$uid": {
+        ".validate": "newData.isBoolean()"
+      }
+    },
+
+    // ============================================================================
+    // METADATA - System-level Configuration & Counters
+    // ============================================================================
+    "_metadata": {
+      ".read": "root.child('admins').child(auth.uid).exists()",
+      ".write": false,
+
+      "blockList": {
+        ".write": "root.child('admins').child(auth.uid).exists()",
+        "$uid": {
+          ".validate": "newData.isBoolean()"
+        }
+      },
+
+      "stats": {
+        ".write": "root.child('admins').child(auth.uid).exists()",
+        "totalUsers": {
+          ".validate": "newData.isNumber()"
+        },
+        "totalDrivers": {
+          ".validate": "newData.isNumber()"
+        },
+        "totalTrips": {
+          ".validate": "newData.isNumber()"
+        }
+      }
+    }
+  }
+}

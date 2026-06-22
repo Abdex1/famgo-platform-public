@@ -1,0 +1,23 @@
+
+# 13. BUILD TEMPO (TRACING)
+
+# FILE
+
+# id="jlwm7x"
+# infra/docker/observability/tempo/docker-compose.tempo.yml
+
+# IMPLEMENTATION
+# id="ic51a8"
+services:
+  tempo:
+    image: grafana/tempo:latest
+
+    container_name: famgo-tempo
+
+    ports:
+      - "${TEMPO_PORT}:3200"
+
+    command: ["-config.file=/etc/tempo.yaml"]
+
+    networks:
+      - famgo-observability

@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dispatch-service-config
+  labels:
+    app: dispatch-service
+data:
+  SERVICE_NAME: dispatch-service
+  ENV: production
+  GRPC_PORT: "5005"
+  HTTP_PORT: "8085"
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_NAME: famgo_platform
+  DB_SSL_MODE: require
+  REDIS_URL: redis://redis:6379
+  KAFKA_ENABLED: "true"
+  KAFKA_BROKERS: kafka:9092
+  KAFKA_GROUP_ID: dispatch-service
+  GPS_SERVICE_URL: gps-service:5002
+  JWT_ISSUER: famgo-platform
+  OTLP_ENDPOINT: otel-collector:4317
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dispatch-service
+  labels:
+    app: dispatch-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dispatch-service
+  template:
+    metadata:
+      labels:
+        app: dispatch-service
+    spec:
+      containers:
+        - name: dispatch-service
+          image: famgo/dispatch-service:latest
+          ports:
+            - name: grpc
+              containerPort: 5005
+            - name: http
+              containerPort: 8085
+          envFrom:
+            - configMapRef:
+                name: dispatch-service-config
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: dispatch-service-secrets
+                  key: db-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dispatch-service-secrets
+                  key: db-password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dispatch-service-secrets
+                  key: jwt-secret
+          livenessProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dispatch-service
+  labels:
+    app: dispatch-service
+spec:
+  selector:
+    app: dispatch-service
+  ports:
+    - name: grpc
+      port: 5005
+      targetPort: grpc
+    - name: http
+      port: 8085
+      targetPort: http

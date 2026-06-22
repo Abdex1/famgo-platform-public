@@ -1,0 +1,30 @@
+
+# 17. BUILD MINIO
+
+# FILE
+
+# id="mzcskl"
+# infra/docker/storage/minio/docker-compose.minio.yml
+
+
+# IMPLEMENTATION
+
+# id="v0z7mu"
+services:
+  minio:
+    image: minio/minio
+
+    container_name: famgo-minio
+
+    command: server /data --console-address ":9001"
+
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+
+    networks:
+      - famgo-core

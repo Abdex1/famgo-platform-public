@@ -1,0 +1,63 @@
+// services/safety-service/proto/safety.proto
+syntax = "proto3";
+
+package safety;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/FamGo/platform/services/safety-service/proto/safety";
+
+service SafetyService {
+  rpc InitiateSOS(InitiateSOSRequest) returns (InitiateSOSResponse);
+  rpc GetIncident(GetIncidentRequest) returns (GetIncidentResponse);
+  rpc EscalateIncident(EscalateIncidentRequest) returns (google.protobuf.Empty);
+  rpc ResolveIncident(ResolveIncidentRequest) returns (google.protobuf.Empty);
+  rpc CancelIncident(CancelIncidentRequest) returns (google.protobuf.Empty);
+}
+
+message InitiateSOSRequest {
+  string ride_id = 1;
+  string user_id = 2;
+  string user_type = 3;
+  double latitude = 4;
+  double longitude = 5;
+  string incident_type = 6;
+  string description = 7;
+}
+
+message InitiateSOSResponse {
+  string incident_id = 1;
+  string status = 2;
+  string escalation_level = 3;
+  google.protobuf.Timestamp initiated_at = 4;
+}
+
+message GetIncidentRequest {
+  string incident_id = 1;
+}
+
+message GetIncidentResponse {
+  string incident_id = 1;
+  string ride_id = 2;
+  string status = 3;
+  string escalation_level = 4;
+  double latitude = 5;
+  double longitude = 6;
+  google.protobuf.Timestamp initiated_at = 7;
+}
+
+message EscalateIncidentRequest {
+  string incident_id = 1;
+  string escalation_level = 2;
+}
+
+message ResolveIncidentRequest {
+  string incident_id = 1;
+  string resolved_by = 2;
+  string resolution_notes = 3;
+}
+
+message CancelIncidentRequest {
+  string incident_id = 1;
+}

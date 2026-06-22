@@ -1,0 +1,29 @@
+
+# STEP 3 — CREATE PROMETHEUS CONFIG
+# infra/monitoring/prometheus/prometheus.yml
+
+# FILE: prometheus.yml
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: otel-collector
+    static_configs:
+      - targets:
+          - otel-collector:8889
+
+  - job_name: auth-service
+    static_configs:
+      - targets:
+          - auth-service:9090
+
+  - job_name: ride-service
+    static_configs:
+      - targets:
+          - ride-service:9090
+
+  - job_name: driver-service
+    static_configs:
+      - targets:
+          - driver-service:9090

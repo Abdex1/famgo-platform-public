@@ -1,0 +1,316 @@
+# ============================================================================
+# NODE & NPM
+# ============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.eslintcache
+.node-gyp/
+*.tsbuildinfo
+
+# ============================================================================
+# ENVIRONMENT & SECRETS
+# ============================================================================
+.env
+.env.local
+.env.*.local
+.env.production.local
+.env.staging.local
+.env.development.local
+.env.test.local
+.secrets/
+secrets.yml
+**/.env.local
+**/.env.*.local
+
+# ============================================================================
+# OS & IDE
+# ============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.history/
+
+# ============================================================================
+# BUILD & DISTRIBUTION
+# ============================================================================
+dist/
+build/
+out/
+*.tgz
+*.tar.gz
+.next/
+out/
+.turbo/
+.cache/
+.eslint-cache/
+
+# ============================================================================
+# GO
+# ============================================================================
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+go.sum
+
+# Go workspace file
+go.work
+
+# ============================================================================
+# PYTHON
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv/
+venv/
+ENV/
+env/
+
+# ============================================================================
+# DOCKER
+# ============================================================================
+.docker/
+docker-compose.override.yml
+.dockerignore
+
+# ============================================================================
+# KUBERNETES
+# ============================================================================
+kubeconfig
+kubeconfig.yml
+*.kubeconfig
+kube.yml
+helm-values.local.yaml
+
+# ============================================================================
+# DATABASE
+# ============================================================================
+*.db
+*.sqlite
+*.sqlite3
+data/
+pgdata/
+mysql-data/
+mongodb/
+redis-dump.rdb
+
+# ============================================================================
+# LOGS & TEMPORARY FILES
+# ============================================================================
+logs/
+*.log
+*.log.*
+tmp/
+temp/
+*.tmp
+
+# ============================================================================
+# TERRAFORM & INFRASTRUCTURE
+# ============================================================================
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+.terraform.lock.hcl
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+crash.*.log
+
+# ============================================================================
+# TESTING & COVERAGE
+# ============================================================================
+coverage/
+.nyc_output/
+htmlcov/
+.coverage
+.pytest_cache/
+.tox/
+.hypothesis/
+*.cover
+.testcov/
+
+# ============================================================================
+# CERTIFICATES & KEYS
+# ============================================================================
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+certs/
+certificates/
+keys/
+private/
+**/*.key
+**/*.pem
+
+# ============================================================================
+# BACKUPS & ARCHIVES
+# ============================================================================
+backups/
+*.backup
+*.bak
+*.sql
+*.sql.gz
+*.zip
+*.tar
+*.tar.gz
+archive/
+
+# ============================================================================
+# IDE SPECIFIC
+# ============================================================================
+.vscode/settings.json
+.vscode/extensions.json
+.idea/workspace.xml
+.idea/tasks.xml
+.classpath
+.c9/
+*.launch
+.settings/
+.sublime-workspace
+.env.test
+
+# ============================================================================
+# CI/CD
+# ============================================================================
+.github/workflows/secrets/
+.gitlab-ci.yml.local
+.circleci/config.local.yml
+.travis.yml.local
+
+# ============================================================================
+# PROJECT SPECIFIC
+# ============================================================================
+dist-types/
+.cache/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ============================================================================
+# FLUTTER SPECIFIC
+# ============================================================================
+apps/flutter-mobile/build/
+apps/flutter-mobile/.dart_tool/
+apps/flutter-mobile/pubspec.lock
+apps/flutter-mobile/coverage/
+.dart_tool/
+doc/api/
+
+# ============================================================================
+# WEB SPECIFIC
+# ============================================================================
+apps/*/node_modules/
+apps/*/.next/
+apps/*/out/
+apps/*/dist/
+apps/*/build/
+
+# ============================================================================
+# GENERATED FILES
+# ============================================================================
+generated/
+*.generated.dart
+*.g.dart
+*.pb.dart
+*.pb.go
+*.pb.cc
+*.pb.h
+
+# ============================================================================
+# VENDOR & DEPENDENCIES LOCK FILES (sometimes excluded)
+# ============================================================================
+# Uncomment if you want to exclude vendor directories:
+# vendor/
+# Composer (PHP) - usually committed
+# composer.lock
+
+# ============================================================================
+# MONITORING & PROFILING
+# ============================================================================
+profiles/
+*.prof
+*.pprof
+heap.dump
+thread.dump
+
+# ============================================================================
+# ANALYTICS & METRICS
+# ============================================================================
+metrics/
+*.metrics
+
+# ============================================================================
+# DOCUMENTATION GENERATION
+# ============================================================================
+docs/_build/
+docs/.doctrees/
+
+# ============================================================================
+# MISCELLANEOUS
+# ============================================================================
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================================================
+# IMPORTANT: DO NOT ADD .env, SECRETS, OR CREDENTIALS FILES BELOW
+# ============================================================================
+# If you accidentally need to ignore something with credentials,
+# use explicit patterns above, not wildcards that might miss items
+# ============================================================================

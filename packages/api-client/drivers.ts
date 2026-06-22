@@ -1,0 +1,102 @@
+C:\dev\FamGo-platform\packages\api-client\client.ts
+declare global { interface ImportMeta { env: Record<string, string | undefined> } }
+const BASE_URL = import.meta.env['VITE_API_BASE_URL'] ?? 'http://localhost:8000';
+
+let _getToken: (() => string | null) | null = null;
+let _onUnauthorized: (() => void) | null = null;
+
+export function configureClient(opts: {
+  getToken: () => string | null;
+  onUnauthorized: () => void;
+}) {
+  _getToken = opts.getToken;
+  _onUnauthorized = opts.onUnauthorized;
+}
+
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+async function request<T>(
+  path: string,
+  init: RequestInit = {},
+  skipAuth = false,
+): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(init.headers as Record<string, string>),
+  };
+
+  if (!skipAuth && _getToken) {
+    const token = _getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${BASE_URL}${path}`, { ...init, headers });
+
+  if (res.status === 401 && !skipAuth) {
+    _onUnauthorized?.();
+    throw new ApiError(401, 'Unauthorized');
+  }
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: res.statusText }));
+    throw new ApiError(res.status, body.error ?? res.statusText);
+  }
+
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+export const http = {
+  get: <T>(path: string) => request<T>(path),
+  post: <T>(path: string, body?: unknown, skipAuth = false) =>
+    request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }, skipAuth),
+  patch: <T>(path: string, body?: unknown) =>
+    request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
+};
+
+
+
+import { http } from './client';
+import type {
+  Driver,
+  DriverAuthResponse,
+  DriverStatus,
+  LoginRequest,
+  NearbyDriversResponse,
+  RefreshRequest,
+  RefreshResponse,
+  RegisterDriverRequest,
+  UpdateLocationRequest,
+  VerifyOTPRequest,
+} from '../types';
+
+export const drivers = {
+  register: (body: RegisterDriverRequest) =>
+    http.post<DriverAuthResponse>('/drivers/register', body, true),
+
+  login: (body: LoginRequest) =>
+    http.post<{ message: string }>('/drivers/login', body, true),
+
+  verifyLogin: (body: VerifyOTPRequest) =>
+    http.post<DriverAuthResponse>('/drivers/verify-login', body, true),
+
+  refresh: (body: RefreshRequest) =>
+    http.post<RefreshResponse>('/drivers/refresh', body, true),
+
+  getProfile: (driverId: string) =>
+    http.get<Driver>(`/drivers/${driverId}`),
+
+  updateLocation: (driverId: string, body: UpdateLocationRequest) =>
+    http.patch<{ status: string }>(`/drivers/${driverId}/location`, body),
+
+  updateStatus: (driverId: string, status: DriverStatus) =>
+    http.patch<Driver>(`/drivers/${driverId}/status`, { status }),
+
+  nearby: (lat: number, lng: number, radius = 5) =>
+    http.get<NearbyDriversResponse>(`/drivers/nearby?lat=${lat}&lng=${lng}&radius=${radius}`),
+};

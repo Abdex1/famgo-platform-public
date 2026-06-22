@@ -1,0 +1,66 @@
+// services/wallet-service/proto/wallet.proto
+syntax = "proto3";
+
+package wallet;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/FamGo/platform/services/wallet-service/proto/wallet";
+
+service WalletService {
+  rpc CreateWallet(CreateWalletRequest) returns (WalletResponse);
+  rpc GetWallet(GetWalletRequest) returns (WalletResponse);
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  rpc Transfer(TransferRequest) returns (google.protobuf.Empty);
+  rpc RecordTransaction(RecordTransactionRequest) returns (TransactionResponse);
+}
+
+message CreateWalletRequest {
+  string user_id = 1;
+  string user_type = 2;
+}
+
+message WalletResponse {
+  string wallet_id = 1;
+  string user_id = 2;
+  double balance = 3;
+  string currency = 4;
+  bool is_active = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message GetWalletRequest {
+  string wallet_id = 1;
+}
+
+message GetBalanceRequest {
+  string wallet_id = 1;
+}
+
+message GetBalanceResponse {
+  double balance = 1;
+  double total_deposited = 2;
+  double total_earned = 3;
+}
+
+message TransferRequest {
+  string from_wallet_id = 1;
+  string to_wallet_id = 2;
+  double amount = 3;
+  string reason = 4;
+}
+
+message RecordTransactionRequest {
+  string wallet_id = 1;
+  string transaction_type = 2;
+  double amount = 3;
+  string description = 4;
+}
+
+message TransactionResponse {
+  string transaction_id = 1;
+  string status = 2;
+  double amount = 3;
+  google.protobuf.Timestamp created_at = 4;
+}

@@ -1,0 +1,33 @@
+'use client';
+
+import * as Sentry from '@sentry/nextjs';
+import { useEffect } from 'react';
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
+  return (
+    <html>
+      <body>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+          <h1 style={{ fontSize: '3rem', fontWeight: 800, color: '#171717' }}>Error</h1>
+          <p style={{ marginTop: '1rem', fontSize: '1.125rem', color: '#525252' }}>Algo salió mal</p>
+          <button
+            onClick={() => reset()}
+            style={{ marginTop: '2rem', padding: '0.75rem 1.5rem', background: '#171717', color: 'white', borderRadius: '0.5rem', border: 'none', cursor: 'pointer' }}
+          >
+            Intentar de nuevo
+          </button>
+        </div>
+      </body>
+    </html>
+  );
+}

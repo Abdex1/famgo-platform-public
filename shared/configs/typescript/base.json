@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+
+  "compilerOptions": {
+    "target": "ES2023",
+
+    "lib": ["ES2023", "DOM"],
+
+    "module": "ESNext",
+
+    "moduleResolution": "Bundler",
+
+    "strict": true,
+
+    "skipLibCheck": true,
+
+    "resolveJsonModule": true,
+
+    "allowSyntheticDefaultImports": true,
+
+    "esModuleInterop": true,
+
+    "forceConsistentCasingInFileNames": true,
+
+    "isolatedModules": true,
+
+    "incremental": true,
+
+    "declaration": true,
+
+    "sourceMap": true,
+
+    "baseUrl": "../../..",
+
+    "paths": {
+      "@famgo/ui/*": ["packages/ui-kit/src/*"],
+      "@famgo/contracts/*": ["shared/contracts/*"],
+      "@famgo/utils/*": ["shared/utilities/*"],
+      "@famgo/config/*": ["shared/configs/*"],
+      "@famgo/telemetry/*": ["shared/telemetry/*"]
+    }
+  }
+}
+/*
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
+
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    "strict": true,
+
+    "skipLibCheck": true,
+
+    "resolveJsonModule": true,
+
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+
+    "forceConsistentCasingInFileNames": true,
+
+    "isolatedModules": true,
+
+    "incremental": true,
+
+    "declaration": true,
+
+    "sourceMap": true,
+
+    "baseUrl": ".",
+
+    "paths": {
+      "@famgo/*": ["../../*"]
+    }
+  }
+}
+*/

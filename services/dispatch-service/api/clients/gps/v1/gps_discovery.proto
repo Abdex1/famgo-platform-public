@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package gps.v1;
+
+option go_package = "github.com/Abdex1/FamGo-platform/services/dispatch-service/api/clients/gps/v1;gpsv1";
+
+service GPSService {
+  rpc FindNearbyDrivers(FindNearbyDriversRequest) returns (FindNearbyDriversResponse);
+}
+
+message FindNearbyDriversRequest {
+  double latitude = 1;
+  double longitude = 2;
+  double radius_km = 3;
+  int32 limit = 4;
+  double base_speed_kmh = 5;
+  bool only_online = 6;
+}
+
+message NearbyDriver {
+  string driver_id = 1;
+  double distance = 2;
+  double eta_minutes = 3;
+  double bearing = 4;
+  double latitude = 5;
+  double longitude = 6;
+  bool is_online = 7;
+  double acceptance_rate = 8;
+  double rating = 9;
+  int32 rides_completed = 10;
+}
+
+message FindNearbyDriversResponse {
+  repeated NearbyDriver drivers = 1;
+  int32 total = 2;
+}

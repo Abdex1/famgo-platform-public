@@ -1,0 +1,37 @@
+# 8. BUILD REDIS BASELINE
+
+# infra/docker/core/redis/docker-compose.redis.yml
+# IMPLEMENTATION
+
+# yaml id="ij22l2"
+services:
+  redis:
+    image: redis:7-alpine
+
+    container_name: famgo-redis
+
+    restart: unless-stopped
+
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+
+    ports:
+      - "${REDIS_PORT}:6379"
+
+    volumes:
+      - redis-data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - famgo-core
+
+volumes:
+  redis-data:

@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package payment;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/FamGo/platform/services/payment-service/proto/payment";
+
+service PaymentService {
+  rpc InitiatePayment(InitiatePaymentRequest) returns (InitiatePaymentResponse);
+  rpc CompletePayment(CompletePaymentRequest) returns (google.protobuf.Empty);
+  rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
+  rpc RefundPayment(RefundPaymentRequest) returns (google.protobuf.Empty);
+  rpc HandleWebhook(HandleWebhookRequest) returns (google.protobuf.Empty);
+}
+
+message InitiatePaymentRequest {
+  string ride_id = 1;
+  string rider_id = 2;
+  string driver_id = 3;
+  double amount = 4;
+  string method = 5;
+}
+
+message InitiatePaymentResponse {
+  string payment_id = 1;
+  string status = 2;
+  double amount = 3;
+}
+
+message CompletePaymentRequest {
+  string payment_id = 1;
+  string transaction_id = 2;
+}
+
+message GetPaymentRequest {
+  string payment_id = 1;
+}
+
+message GetPaymentResponse {
+  string payment_id = 1;
+  string ride_id = 2;
+  string status = 3;
+  double amount = 4;
+  string method = 5;
+  google.protobuf.Timestamp completed_at = 6;
+}
+
+message RefundPaymentRequest {
+  string payment_id = 1;
+  double amount = 2;
+  string reason = 3;
+}
+
+message HandleWebhookRequest {
+  string payment_id = 1;
+  string provider = 2;
+  string transaction_id = 3;
+}

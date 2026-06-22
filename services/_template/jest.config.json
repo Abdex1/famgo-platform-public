@@ -1,0 +1,22 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "rootDir": "src",
+  "testRegex": ".*\\.spec\\.ts$",
+  "collectFilesCoverageFrom": [
+    "**/*.(t|j)s",
+    "!**/*main.ts",
+    "!**/*.module.ts"
+  ],
+  "coverageDirectory": "../coverage",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "testPathIgnorePatterns": [
+    "/node_modules/",
+    "/dist/"
+  ],
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/../src/$1"
+  }
+}
